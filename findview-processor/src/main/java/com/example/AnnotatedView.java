@@ -30,7 +30,10 @@ public class AnnotatedView {
     }
 
     public String getFullClassName() {
-        return mFullClassName;
+        if (mElement.getAnnotation(Test.class) == null) {
+            return mFullClassName;
+        }
+        return mFullClassName + "_";
     }
 
     public TypeMirror getClassType() {

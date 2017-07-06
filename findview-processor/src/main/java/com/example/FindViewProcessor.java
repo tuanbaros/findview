@@ -6,8 +6,11 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +19,6 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -24,7 +26,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-@SupportedAnnotationTypes("com.example.ViewById")
+//@SupportedAnnotationTypes("com.example.ViewById")
 @AutoService(Processor.class)
 public class FindViewProcessor extends AbstractProcessor {
 
@@ -37,6 +39,8 @@ public class FindViewProcessor extends AbstractProcessor {
             "target.%1$s = (%2$s) view.findViewById(%3$s)";
 
     private final String DOT = ".";
+
+    private List<Class<? extends Annotation>> mList = Arrays.asList(ViewById.class, Test.class);
 
     private Filer mFiler;
     private ProcessingEnvironment mProcessingEnvironment;
@@ -52,6 +56,15 @@ public class FindViewProcessor extends AbstractProcessor {
         mTypes = processingEnv.getTypeUtils();
         //        Element        e   = processingEnv.getTypeUtils().asElement(type);
         //        PackageElement pkg = processingEnv.getElementUtils().getPackageOf(e);
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        Set<String> annotations = new LinkedHashSet<>();
+        for (Class<? extends Annotation> annotation : mList) {
+            annotations.add(annotation.getCanonicalName());
+        }
+        return annotations;
     }
 
     @Override
@@ -105,7 +118,10 @@ public class FindViewProcessor extends AbstractProcessor {
 
     private boolean checkGenType(AnnotatedView annotatedView) {
         return (annotatedView.getFullClassName()
-                .replace(getPackage(annotatedView.getElement()) + DOT, "")).contains(DOT);
+                .replace(getPackage(annotatedView.getElement()) + DOT, "")).contains(DOT)
+                || annotatedView.getFullClassName()
+                .replace(getPackage(annotatedView.getElement()) + DOT, "")
+                .contains("_");
     }
 
     private TypeSpec createClass(String className, MethodSpec constructor) {
